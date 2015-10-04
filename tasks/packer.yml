@@ -1,0 +1,9 @@
+---
+- name: install nginx
+  packer:
+    name: "{{ nginx_pkg_name | default('nginx') }}"
+    state: "{{ nginx_pkg_state | default('present') }}"
+  tags:
+    - nginx
+    - pacman
+    - packer

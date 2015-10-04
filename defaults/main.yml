@@ -1,0 +1,11 @@
+---
+# defaults file for nginx
+nginx_homedir: /opt/nginx
+nginx_config_dest: "{{ nginx_homedir }}/nginx.conf"
+
+nginx_owner: nginx
+nginx_group: nginx
+nginx_file_mode: '0644'
+nginx_dir_mode: '0755'
+
+nginx_service_name: nginx

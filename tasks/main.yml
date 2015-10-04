@@ -1,0 +1,18 @@
+---
+# tasks file for nginx
+- include: packer.yml
+  when: ansible_pkg_mgr == 'pacman'
+  tags:
+    - nginx
+    - pacman
+    - packer
+
+- include: nginx_config.yml
+  tags:
+    - nginx
+    - config
+
+- include: service.yml
+  tags:
+    - nginx
+    - service

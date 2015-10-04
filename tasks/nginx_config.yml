@@ -1,0 +1,16 @@
+---
+- name: add options to nginx.ini
+  nginx_config:
+    dest: "{{ nginx_config_dest }}"
+    settings: "{{ nginx_config_settings | default(omit) }}"
+    follow: "{{ nginx_follow | default(omit) }}"
+    group: "{{ nginx_group }}"
+    mode: "{{ nginx_file_mode }}"
+    owner: "{{ nginx_owner }}"
+    selevel: "{{ nginx_selevel | default(omit) }}"
+    serole: "{{ nginx_serole | default(omit) }}"
+    setype: "{{ nginx_setype | default(omit) }}"
+    seuser: "{{ nginx_seuser | default(omit) }}"
+  tags:
+    - nginx
+    - config

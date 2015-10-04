@@ -1,0 +1,15 @@
+---
+# Sample playbook for nginx role
+- hosts: all
+  roles:
+    - role: nginx
+      nginx_config_settings:
+        misc:
+          port: 9090
+          https_port: 9095
+          username: humphrey
+          password: dontbogart
+      nginx_file_mode: '0644'
+      nginx_service_enabled: no
+      nginx_service_state: stopped
+      become: true
