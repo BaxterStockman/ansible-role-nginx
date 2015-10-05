@@ -1,11 +1,28 @@
 ---
 # tasks file for nginx
-- include: packer.yml
-  when: ansible_pkg_mgr == 'pacman'
-  tags:
-    - nginx
-    - pacman
-    - packer
+#- include: packer.yml
+#  when: ansible_pkg_mgr == 'pacman'
+#  tags:
+#    - nginx
+#    - pacman
+#    - packer
+#
+#- include: bootstrap.yml
+#  when: nginx_bootstrap | default('yes') | bool
+#  tags:
+#    - nginx
+#    - bootstrap
+#
+    #- name: test whether nginxparser is available
+    #  command: "{{ ansible_python_interpreter }} -c 'import nginxparser'"
+    #  ignore_errors: yes
+    #  register: nginxparser_loadable
+    #
+    #- name: fail unless nginxparser is loadable
+    #  fail:
+    #    msg: >
+    #      "nginxparser python library is not available on {{ ansible_hostname }}"
+    #  when: nginxparser_loadable.rc != 0
 
 - include: nginx_config.yml
   tags:
