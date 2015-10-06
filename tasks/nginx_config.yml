@@ -11,6 +11,14 @@
     serole: "{{ nginx_serole | default(omit) }}"
     setype: "{{ nginx_setype | default(omit) }}"
     seuser: "{{ nginx_seuser | default(omit) }}"
+  register: nginx_config_res
+  tags:
+    - nginx
+    - config
+
+- name: debug
+  debug:
+    var: nginx_config_res['config']
   tags:
     - nginx
     - config

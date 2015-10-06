@@ -24,7 +24,7 @@ module: nginx_config
 short_description: Manage C(nginx.conf)
 extends_documentation_fragment: files
 description:
-     - Add, remove or update settings in the Nginx configuration file
+     - Add, remove or update settings in the NGINX configuration file
        C(nginx.conf) without needing to manage the whole shebang.
      - Supports a I(batch) mode for making multiple configuration changes in
        one go.
@@ -36,11 +36,6 @@ options:
       - If this file does not already exist, it will be created.
     required: no
     default: C(/opt/nginx/nginx.conf)
-  libdir:
-    description:
-      - Path to the Nginx Python libraries.
-    required: no
-    default: C(os.path.basename(/opt/nginx))
   section:
     description:
       - The name of a C([section]) in C(nginx.conf).
@@ -144,9 +139,8 @@ from utils import nginxparser
 # NginxConfigWrapper
 
 class NginxConfigWrapper(object):
-    def __init__(self, module, filename, state='batch', libdir=None,
-                 settings=None, section=None, option=None, value=None,
-                 backup=False):
+    def __init__(self, module, filename, state='batch', settings=None,
+                 section=None, option=None, value=None, backup=False):
         self.module = module
         self.filename = filename
         self.state = state
@@ -239,7 +233,9 @@ class NginxConfigWrapper(object):
         changed = self.is_changed(init_config_dict, self.config)
 
         # Write out the configuration, if not in check_mode
-        return self.cleanup(changed)
+        changed = self.cleanup(changed)
+
+        return changed, self.config
 
     def get_config(self, filename=None, reload=False):
         if filename is None:
@@ -252,7 +248,7 @@ class NginxConfigWrapper(object):
             fileobj.close()
         except Exception as err:
             self.module.fail_json(msg="Can't read Nginx config file %s: %s" %
-                                (filename, str(err)))
+                                  (filename, str(err)))
 
         return self.config
 
@@ -264,7 +260,7 @@ class NginxConfigWrapper(object):
             fileobj.close()
         except IOError as err:
             self.module.fail_json(msg="Failed to write Nginx configuration file %s: %s"
-                             % (self.filename, str(err)))
+                                  % (self.filename, str(err)))
 
     def merge_config(self, left, right):
         ''' stolen from ansible.utils.merge_hash '''
@@ -280,8 +276,7 @@ class NginxConfigWrapper(object):
         return res_dict
 
     def is_changed(self, left, right):
-        """ Nothing more complicated ATM
-        """
+        ''' Nothing more complicated ATM '''
         return (cmp(left, right) != 0)
 
     def do_present(self, settings=None, section=None, option=None, value=None, config=None):
@@ -326,18 +321,38 @@ class NginxConfigWrapper(object):
         self.config = self.merge_config(self.get_config(), self.settings)
 
     def to_dict(self, caller_nested_list):
+        '''
+        Converts a nested list of the form produced by nginxparser.load(s) into
+        a dict
+        '''
+
         res_dict = dict()
+        # Copy to avoid changing the caller's list
         nested_list = copy.deepcopy(caller_nested_list)
 
         for elem in nested_list:
+            # FIXME not sure whether we'll ever get anything other than lists
+            # as elements of the nested list...
             if isinstance(elem, list):
+                # When presented with KEY { STUFF_IN_BLOCK } in nginx.conf, the
+                # nested list will contain:
+                # [[[KEY], [(decomposition of) STUFF_IN_BLOCK]]].
+                # In this situation, we will be recursing on the current list
+                # element.
                 if isinstance(elem[0], list):
+                    # Special handling for 'location' blocks, which are
+                    # decomposed into three-part lists of the form:
+                    # ['location', MATCH_TYPE, URL].  In order to avoid
+                    # clobbering data when multiple location blocks exist, we
+                    # use the URL string as the dict key and add a mapping of
+                    # 'location': MATCH_TYPE to the generated sub-dict.
                     if len(elem[0]) > 1:
                         key = elem[0].pop()
                         res_dict[key] = self.to_dict(elem[1])
                         if len (elem[0]) > 1:
                             res_dict[key].update({'location': elem[0][-1]})
                         else:
+                            # Not all location blocks have MATCH_TYPE...
                             res_dict[key].update({'location': None})
 
                     else:
@@ -364,6 +379,9 @@ class NginxConfigWrapper(object):
                         key_list = ['location', key]
                     del(value['location'])
                 nested_list.append([key_list, self.un_dict(value)])
+            elif isinstance(value, list):
+                value[0:] = key
+                nested_list.append(value)
             else:
                 nested_list.append([key, value])
 
@@ -376,7 +394,6 @@ def main():
     module = AnsibleModule(
         argument_spec = dict(
             dest     = dict(required=True),
-            libdir   = dict(required=False),
             settings = dict(required=False, type='dict'),
             section  = dict(required=False, type='str'),
             option   = dict(required=False),
@@ -389,9 +406,6 @@ def main():
     )
 
     dest = os.path.expanduser(module.params['dest'])
-    libdir = None
-    if module.params['libdir'] is not None:
-        libdir = os.path.expanduser(module.params['libdir'])
     section = module.params['section']
     option = module.params['option']
     value = module.params['value']
@@ -399,14 +413,14 @@ def main():
     state = module.params['state']
     backup = module.params['backup']
 
-    config = NginxConfigWrapper(module, dest, libdir=libdir, section=section,
-                                option=option, value=value, settings=settings,
-                                state=state, backup=backup)
+    config = NginxConfigWrapper(module, dest, section=section, option=option,
+                                value=value, settings=settings, state=state,
+                                backup=backup)
 
-    changed = config.run(section=section, option=option, value=value,
+    (changed, config_dict) = config.run(section=section, option=option, value=value,
                          settings=settings)
 
-    module.exit_json(dest=dest, changed=changed, msg="OK")
+    module.exit_json(dest=dest, msg="OK", changed=changed, config=config_dict)
 
 # import module snippets
 from ansible.module_utils.basic import *

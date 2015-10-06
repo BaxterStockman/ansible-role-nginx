@@ -121,4 +121,8 @@ categories:
 # NOTE you'll need the packer module installed if you want to install the
 # nginx AUR package
 dependencies: []
+# TODO factor out action_modules/nginx_config.py into a general-purpose
+# bootstrapping module
+#dependencies:
+#  - bootstrap
 
