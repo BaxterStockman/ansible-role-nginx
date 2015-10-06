@@ -20,30 +20,30 @@
 
 DOCUMENTATION = '''
 ---
-module: sabnzbd_config
-short_description: Manage C(sabnzbd.ini)
+module: nginx_config
+short_description: Manage C(nginx.conf)
 extends_documentation_fragment: files
 description:
-     - Add, remove or update settings in the NGINX configuration file
-       C(sabnzbd.ini) without needing to manage the whole shebang.
+     - Add, remove or update settings in the Nginx configuration file
+       C(nginx.conf) without needing to manage the whole shebang.
      - Supports a I(batch) mode for making multiple configuration changes in
        one go.
 version_added: "1.9"
 options:
   dest:
     description:
-      - Path to C(sabnzbd.ini).
+      - Path to C(nginx.conf).
       - If this file does not already exist, it will be created.
     required: no
-    default: C(/opt/sabnzbd/sabnzbd.ini)
+    default: C(/opt/nginx/nginx.conf)
   libdir:
     description:
-      - Path to the NGINX Python libraries.
+      - Path to the Nginx Python libraries.
     required: no
-    default: C(os.path.basename(/opt/sabnzbd))
+    default: C(os.path.basename(/opt/nginx))
   section:
     description:
-      - The name of a C([section]) in C(sabnzbd.ini).
+      - The name of a C([section]) in C(nginx.conf).
       - Will be ignored in batch mode.
     required: no
     default: null
@@ -61,7 +61,7 @@ options:
     default: null
   settings:
     description:
-      - A hash of settings that will be merged into C(sabnzbd.ini).
+      - A hash of settings that will be merged into C(nginx.conf).
       - Top-level keys are section names, (almost) everything else is a
         C(option = value) pair (see the 'Notes' section for the exception).
   state:
@@ -70,39 +70,39 @@ options:
       - If I(state) is I(absent) and I(option) is not defined, the entire
         I(section) will be removed.
       - In batch mode, the I(settings) hash is merged recursively into any
-        existing NGINX options.  No state concerning I(settings) is
+        existing Nginx options.  No state concerning I(settings) is
         maintained between plays, so if you accidentally included C(frob=nozzle)
         somewhere in your I(settings) hash, it's going to stay in
-        C(sabnzbd.ini) until you remove it with C(state=absent), or manually.
+        C(nginx.conf) until you remove it with C(state=absent), or manually.
     required: no
     default: "batch"
     choices: [ "present", "absent", "batch" ]
   backup:
     description:
-      - Create a timestamped backup of the original C(sabnzbd.ini).
+      - Create a timestamped backup of the original C(nginx.conf).
     required: no
     default: "no"
     choices: [ "yes", "no" ]
 notes:
-  - This module uses NGINX's library code for manipulating the
-    configuration file, so NGINX must be installed and its libraries must
+  - This module uses Nginx's library code for manipulating the
+    configuration file, so Nginx must be installed and its libraries must
     be readable or the module will fail to run.
-  - NGINX does a fair bit of internal twiddling between (1) loading the
+  - Nginx does a fair bit of internal twiddling between (1) loading the
     configuration file into a ConfigObj object, (2) translating configuration
     file settings into its own internal database settings, and (3) merging that
     database back into the ConfigObj object prior to writing out a new
     configuration file.  This twiddling includes, but is far from limited to,
     adding default values for the various C([categories]).  Rather than try to
-    re-implement NGINX's internal logic, this module instead tries its
-    hardest to rely on NGINX's own library routines.  But because so much of
+    re-implement Nginx's internal logic, this module instead tries its
+    hardest to rely on Nginx's own library routines.  But because so much of
     the munging logic just described occurs within subroutines that
     inextricably involve reading from and writing to disk, this module is very
-    heavy on the I/O -- every C(sabnzbd_config) task involves at least two
-    reads and two writes of C(sabnzbd.ini).  Batch mode helps cut down on this.
+    heavy on the I/O -- every C(nginx_config) task involves at least two
+    reads and two writes of C(nginx.conf).  Batch mode helps cut down on this.
   - Final caution: this module does not preserve comments in the configuration
     file.
 
-requirements: [ sabnzbd ]
+requirements: [ nginx ]
 
 author: Matt Schreiber U(https://github.com/BaxterStockman), based on Jan-Piet
         Miens' work on the M(ini_file) module.
@@ -110,39 +110,40 @@ author: Matt Schreiber U(https://github.com/BaxterStockman), based on Jan-Piet
 
 EXAMPLES = '''
 # Change value of port and https_port in the [misc] section
-- sabnzbd_config:
-    dest: "/opt/sabnzbd/sabnzbd.ini"
+- nginx_config:
+    dest: "/opt/nginx/nginx.conf"
     settings:
       misc:
         port: 9090
         https_port: 9095
 
 # Delete the [growl] section
-- sabnzbd_config:
-    dest: "/opt/sabnzbd/sabnzbd.ini"
+- nginx_config:
+    dest: "/opt/nginx/nginx.conf"
     section: growl
     ensure: absent
 
 # Delete the 'priority' key from the [categories][[tv]] section
-- sabnzbd_config:
-    dest: "/opt/sabnzbd/sabnzbd.ini"
+- nginx_config:
+    dest: "/opt/nginx/nginx.conf"
     section: categories
     option:
       tv: priority
     ensure: absent
 '''
 
+import copy
 import os
-import sys
 import shutil
+import sys
 import tempfile
 
 from utils import nginxparser
 
 # ==============================================================
-# NGINXConfigWrapper
+# NginxConfigWrapper
 
-class NGINXConfigWrapper(object):
+class NginxConfigWrapper(object):
     def __init__(self, module, filename, state='batch', libdir=None,
                  settings=None, section=None, option=None, value=None,
                  backup=False):
@@ -166,7 +167,7 @@ class NGINXConfigWrapper(object):
             except (OSError, IOError):
                 pass
             except Exception as err:
-                module.fail_json(msg="Error backing up NGINX configuration %s: %s"
+                module.fail_json(msg="Error backing up Nginx configuration %s: %s"
                                  % (filename, str(err)))
 
         self.set_operation(state)
@@ -174,7 +175,7 @@ class NGINXConfigWrapper(object):
         self.validate()
 
     def cleanup(self, changed):
-        if module.check_mode:
+        if self.module.check_mode:
             # Try to restore backup file
             try:
                 shutil.move(self.temp_filename, self.filename)
@@ -185,7 +186,7 @@ class NGINXConfigWrapper(object):
                 try:
                     os.remove(filename)
                 except Exception as err:
-                    self.module.fail_json(msg="Can't remove NGINX config file %s: %s"
+                    self.module.fail_json(msg="Can't remove Nginx config file %s: %s"
                                           % (self.filename, str(err)))
             return changed
         else:
@@ -193,10 +194,10 @@ class NGINXConfigWrapper(object):
                 if self.backup:
                     self.module.backup_local(filename)
 
-                self.write_config()
+                self.save_config()
 
-            file_args = module.load_file_common_arguments(module.params)
-            return module.set_fs_attributes_if_different(file_args, changed)
+            file_args = self.module.load_file_common_arguments(self.module.params)
+            return self.module.set_fs_attributes_if_different(file_args, changed)
 
     def set_operation(self, state=None):
         if state is None:
@@ -227,58 +228,56 @@ class NGINXConfigWrapper(object):
 
     def run(self, *args, **kwargs):
         # Store initial config
-        init_config_dict = self.get_config().dict()
+        init_config_dict = self.get_config()
 
         # Execute the operation.  Write out the configuration file, then
-        # reload.  This is so that NGINX can do its internal twiddling with
+        # reload.  This is so that Nginx can do its internal twiddling with
         # configuration values, rather than reimplement all that here.
         self.operation(*args, **kwargs)
-        self.write_config()
-        new_config_dict = self.get_config(reload=True).dict()
 
         # Determine whether a change occurred
-        changed = self.is_changed(init_config_dict, new_config_dict)
+        changed = self.is_changed(init_config_dict, self.config)
 
         # Write out the configuration, if not in check_mode
         return self.cleanup(changed)
 
-    def load(self, filename=None, reload=False):
+    def get_config(self, filename=None, reload=False):
         if filename is None:
             filename = self.filename
 
         try:
-            self.file = open(filename)
-            self.config = nginxparser.load(self.file)
+            fileobj = open(filename)
+            blocks = nginxparser.load(fileobj)
+            self.config = self.to_dict(blocks)
+            fileobj.close()
         except Exception as err:
-            self.module.fail_json(msg="Can't read NGINX config file %s: %s" %
+            self.module.fail_json(msg="Can't read Nginx config file %s: %s" %
                                 (filename, str(err)))
-
-    def get_config(self, filename=None, reload=False):
-        if (not hasattr(self, 'config')) or reload:
-            self.config = self.read_config(filename, reload)
 
         return self.config
 
-    def write_config(self):
-        try:
-            self.config.write()
-        except IOError as err:
-            module.fail_json(msg="Failed to write NGINX configuration file %s: %s"
-                             % (filename, str(err)))
-
     def save_config(self):
-        """ Wrapper for sabnzbd.config.save_config().  Forces saving by setting
-            sabnzbd.config.modified to True
-        """
+        try:
+            fileobj = open(self.filename, 'w')
+            blocks = self.un_dict(self.config)
+            fileobj.write(nginxparser.dumps(blocks))
+            fileobj.close()
+        except IOError as err:
+            self.module.fail_json(msg="Failed to write Nginx configuration file %s: %s"
+                             % (self.filename, str(err)))
 
-        # Do this or sabnzbd.config.save_config() method will exit immediately
-        self.sabconfig.modified = True
+    def merge_config(self, left, right):
+        ''' stolen from ansible.utils.merge_hash '''
+        res_dict = dict()
 
-        if not self.sabconfig.save_config():
-            self.module.fail_json(msg="Can't save NGINX config file %s" %
-                                  self.filename)
+        for dicts in left, right:
+            for key, value in dicts.iteritems():
+                if key in res_dict and isinstance(res_dict[key], dict):
+                    res_dict[key] = self.merge_config(left[key], value)
+                else:
+                    res_dict[key] = value
 
-        return True
+        return res_dict
 
     def is_changed(self, left, right):
         """ Nothing more complicated ATM
@@ -290,7 +289,7 @@ class NGINXConfigWrapper(object):
             config = self.get_config()
 
         try:
-            config[section].merge({option: value})
+            config[section] = self.merge_config(config[section], {option: value})
         except KeyError:
             config[section] = {option: value}
 
@@ -324,8 +323,51 @@ class NGINXConfigWrapper(object):
             settings = self.settings
 
         # Now merge the wanted settings and compare
-        self.get_config().merge(self.settings)
+        self.config = self.merge_config(self.get_config(), self.settings)
 
+    def to_dict(self, caller_nested_list):
+        res_dict = dict()
+        nested_list = copy.deepcopy(caller_nested_list)
+
+        for elem in nested_list:
+            if isinstance(elem, list):
+                if isinstance(elem[0], list):
+                    if len(elem[0]) > 1:
+                        key = elem[0].pop()
+                        res_dict[key] = self.to_dict(elem[1])
+                        if len (elem[0]) > 1:
+                            res_dict[key].update({'location': elem[0][-1]})
+                        else:
+                            res_dict[key].update({'location': None})
+
+                    else:
+                        res_dict[elem[0][0]] = self.to_dict(elem[1])
+                else:
+                    if len(elem) > 2:
+                        res_dict[elem[0]] = elem[1:]
+                    else:
+                        res_dict[elem[0]] = elem[1]
+
+        return res_dict
+
+    def un_dict(self, caller_res_dict):
+        nested_list = list()
+
+        res_dict = copy.deepcopy(caller_res_dict)
+        for key, value in res_dict.iteritems():
+            if isinstance(value, dict):
+                key_list = [key]
+                if 'location' in value:
+                    if value['location'] is not None:
+                        key_list = ['location', value['location'], key]
+                    else:
+                        key_list = ['location', key]
+                    del(value['location'])
+                nested_list.append([key_list, self.un_dict(value)])
+            else:
+                nested_list.append([key, value])
+
+        return nested_list
 
 # ==============================================================
 # main
@@ -346,9 +388,6 @@ def main():
         supports_check_mode = True
     )
 
-    import pprint
-    module.exit_json(msg=pprint.pformat(sys.path))
-
     dest = os.path.expanduser(module.params['dest'])
     libdir = None
     if module.params['libdir'] is not None:
@@ -360,12 +399,12 @@ def main():
     state = module.params['state']
     backup = module.params['backup']
 
-    config = NGINXConfigWrapper(module, dest, libdir=libdir, section=section,
-                                  option=option, value=value,
-                                  settings=settings, state=state,
-                                  backup=backup)
+    config = NginxConfigWrapper(module, dest, libdir=libdir, section=section,
+                                option=option, value=value, settings=settings,
+                                state=state, backup=backup)
 
-    changed = config.run(section=section, option=option, value=value, settings=settings)
+    changed = config.run(section=section, option=option, value=value,
+                         settings=settings)
 
     module.exit_json(dest=dest, changed=changed, msg="OK")
 
