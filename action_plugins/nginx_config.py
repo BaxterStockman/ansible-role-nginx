@@ -40,7 +40,7 @@ class ActionModule(object):
         utils_src = os.path.join(self.runner.basedir, 'library', 'utils')
 
         # upload library files to temporary directory using the 'copy' module
-        copy_module_args = utils.merge_module_args('', dict(
+        copy_module_args = utils.serialize_args(dict(
             src=utils_src,
             dest=tmp,
             original_basename=os.path.basename(utils_src),
