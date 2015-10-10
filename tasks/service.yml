@@ -7,7 +7,8 @@
     pattern: "{{ nginx_service_pattern | default(omit) }}"
     runlevel: "{{ nginx_service_runlevel | default(omit) }}"
     sleep: "{{ nginx_service_sleep | default(omit) }}"
-    state: "{{ nginx_service_state | default(omit) }}"
+    enabled: "{{ nginx_service_enabled }}"
+  when: nginx_service_enabled is defined
   tags:
     - nginx
     - service

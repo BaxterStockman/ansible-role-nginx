@@ -1,2 +1,13 @@
 ---
 # handlers file for nginx
+- name: restart nginx service
+  service:
+    arguments: "{{ nginx_service_arguments | default(omit) }}"
+    name: "{{ nginx_service_name }}"
+    pattern: "{{ nginx_service_pattern | default(omit) }}"
+    runlevel: "{{ nginx_service_runlevel | default(omit) }}"
+    sleep: "{{ nginx_service_sleep | default(omit) }}"
+    state: "{{ nginx_service_state }}"
+  tags:
+    - nginx
+    - service

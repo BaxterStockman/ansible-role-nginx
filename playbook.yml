@@ -6,7 +6,7 @@
       nginx_config_settings:
         http:
           server:
-            '/this.*':
+            '/this-.*':
               location: "~"
               root: '/usr/share/webapps/this'
               index: 'index.htm'
