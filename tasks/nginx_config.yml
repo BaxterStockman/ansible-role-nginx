@@ -1,5 +1,5 @@
 ---
-- name: add options to nginx.ini
+- name: add options to nginx.conf
   bootstrap:
     sources:
       - src: utils
@@ -17,13 +17,6 @@
   register: nginx_config_res
   notify:
     - restart nginx service
-  tags:
-    - nginx
-    - config
-
-- name: debug
-  debug:
-    var: nginx_config_res
   tags:
     - nginx
     - config
