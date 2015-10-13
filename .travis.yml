@@ -5,7 +5,6 @@ python: "2.7"
 
 env:
     - SITE=playbook.yml
-    - ANSIBLE_ROLES_TMP=/tmp/roles
 
 install:
     # Install ansible
@@ -21,11 +20,11 @@ script:
     - "ansible-playbook -l travis test/$SITE --syntax-check"
 
     # Run the role/playbook with ansible-playbook
-    - "ansible-playbook -l travis test/$SITE"
+    - "ansible-playbook -l travis test/$SITE --become"
 
     # Run the role/playbook again, checking for idempotence
     - >
-        if ansible-playbook -l travis test/$SITE | grep -q "changed=0.*failed=0"; then
+        if ansible-playbook -l travis test/$SITE --become | grep -q "changed=0.*failed=0"; then
             echo "Idempotence test: pass"
             exit 0
         else
