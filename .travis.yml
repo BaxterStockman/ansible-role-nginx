@@ -11,27 +11,10 @@ install:
     # Install ansible
     - pip install --upgrade pip
     - pip install ansible
-    - mkdir -p /tmp/roles
-    - ansible-galaxy install -p "$ANSIBLE_ROLES_TMP" https://github.com/BaxterStockman/ansible-bootstrap.git,master,bootstrap
-    - mkdir ~/.ansible
-    - cp -a "$ANSIBLE_ROLES_TMP"/bootstrap/library ~/.ansible
-    - >
-        for plugin_type in action_modules callback_modules; then
-            mkdir -p ~/.ansible/plugins
-            cp -a "${ANSIBLE_ROLES_TMP}/bootstrap/${plugin_type}/" ~/.ansible/plugins
-        done
-
+    - .travis/install.sh
 
 before_script:
-    # Ensure that Ansible recognizes the short-form role name, rather than the
-    # name of the GitHub repo.  For instance, $PWD/../ansible-role-nginx gets
-    # symlinked to $PWD/../nginx so the playbook can contain "role: nginx".
-    - >
-        bash -c 'basename="${PWD##*/}" ; \
-            role_name="${basename##*-}" ; \
-            ln -sf "$basename" ../"$role_name"'
-    - mkdir -p ~/roles
-    - 'ansible-galaxy install -p ~/roles bootstrap https://github.com/BaxterStockman/ansible-bootstrap.git'
+    - .travis/before_script.sh
 
 script:
     # Check syntax
