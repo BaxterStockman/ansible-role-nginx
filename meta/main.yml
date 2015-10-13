@@ -118,6 +118,6 @@ categories:
   #- packaging
   #- system
   - web
-dependencies:
-  - bootstrap
+dependencies: []
+#- bootstrap
 

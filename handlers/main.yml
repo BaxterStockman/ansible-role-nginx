@@ -1,4 +1,21 @@
 ---
+- name: check nginx config
+  stat:
+    follow: "{{ nginx_follow | default(omit) }}"
+    get_checksum: yes
+    path: "{{ nginx_config_dest }}"
+  register: nginx_config_stat_post
+  notify:
+    - compare nginx config stats
+  tags:
+    - nginx
+    - config
+
+- name: compare nginx config stats
+  debug: trigger nginx restart
+  changed_when: nginx_config_stat_pre.checksum != nginx_config_stat_post.checksum
+
+
 # handlers file for nginx
 - name: restart nginx service
   service:

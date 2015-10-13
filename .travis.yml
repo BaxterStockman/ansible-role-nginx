@@ -5,11 +5,20 @@ python: "2.7"
 
 env:
     - SITE=playbook.yml
+    - ANSIBLE_ROLES_TMP=/tmp/roles
 
 install:
     # Install ansible
     - pip install --upgrade pip
     - pip install ansible
+    - mkdir -p /tmp/roles
+    - ansible-galaxy install -p "$ANSIBLE_ROLES_TMP" https://github.com/BaxterStockman/ansible-bootstrap.git,master,bootstrap
+    - install -Dt ~/.ansible/library "$ANSIBLE_ROLES_TMP"/bootstrap/library/*
+    - >
+        for mod_type in action_modules callback_modules; then
+            install -Dt ~/.ansible/"$mod_type" "${ANSIBLE_ROLES_TMP}/bootstrap/${mod_type}/"*
+        done
+
 
 before_script:
     # Ensure that Ansible recognizes the short-form role name, rather than the
@@ -19,6 +28,8 @@ before_script:
         bash -c 'basename="${PWD##*/}" ; \
             role_name="${basename##*-}" ; \
             ln -sf "$basename" ../"$role_name"'
+    - mkdir -p ~/roles
+    - 'ansible-galaxy install -p ~/roles bootstrap https://github.com/BaxterStockman/ansible-bootstrap.git'
 
 script:
     # Check syntax

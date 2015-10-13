@@ -1,14 +1,20 @@
 ---
 # tasks file for nginx
 
-- include: packer.yml
+- include: pacman.yml
   when: ansible_pkg_mgr == 'pacman'
   tags:
     - nginx
     - pacman
-    - packer
 
-- include: nginx_config.yml
+- name: get pre-run stat of nginx config
+  stat:
+    follow: "{{ nginx_follow | default(omit) }}"
+    get_checksum: yes
+    path: "{{ nginx_config_dest }}"
+  register: nginx_config_stat_pre
+  notify:
+    - check nginx config
   tags:
     - nginx
     - config
