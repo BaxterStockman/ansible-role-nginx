@@ -13,10 +13,12 @@ install:
     - pip install ansible
     - mkdir -p /tmp/roles
     - ansible-galaxy install -p "$ANSIBLE_ROLES_TMP" https://github.com/BaxterStockman/ansible-bootstrap.git,master,bootstrap
-    - install -Dt ~/.ansible/library "$ANSIBLE_ROLES_TMP"/bootstrap/library/*
+    - mkdir ~/.ansible
+    - cp -a "$ANSIBLE_ROLES_TMP"/bootstrap/library ~/.ansible
     - >
-        for mod_type in action_modules callback_modules; then
-            install -Dt ~/.ansible/"$mod_type" "${ANSIBLE_ROLES_TMP}/bootstrap/${mod_type}/"*
+        for plugin_type in action_modules callback_modules; then
+            mkdir -p ~/.ansible/plugins
+            cp -a "${ANSIBLE_ROLES_TMP}/bootstrap/${plugin_type}/" ~/.ansible/plugins
         done
 
 
