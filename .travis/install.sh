@@ -14,7 +14,7 @@ ansible-galaxy install -p "$tmpdir" \
     "${BOOTSTRAP_URL},${BOOTSTRAP_VERSION},${BOOTSTRAP_ROLE_NAME}"
 
 mkdir -p "${ANSIBLE_HOME}/plugins"
-for plugin_type in action_modules callback_modules; do
+for plugin_type in action_plugins callback_plugins; do
     cp -a "${tmpdir}/${BOOTSTRAP_ROLE_NAME}/${plugin_type}" "${ANSIBLE_HOME}/plugins"
 done
 

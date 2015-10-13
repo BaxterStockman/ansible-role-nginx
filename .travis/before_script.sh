@@ -5,10 +5,14 @@
 # symlinked to $PWD/../nginx so the playbook can contain "role: nginx".
 : "${DESTDIR:="$PWD"}"
 
-dirname="${DESTDIR##*/}"
+DESTDIR="$(readlink -m "$DESTDIR")"
+
+mkdir -p "$DESTDIR"
+
+dirname="${DESTDIR%/*}"
 
 if [[ -z "$ROLE_NAME" ]]; then
-    ROLE_NAME="${dirname##*-}"
+    ROLE_NAME="${DESTDIR##*-}"
 fi
 
-ln -sf "$dirname" ../"$ROLE_NAME"
+ln -sf "$DESTDIR" "${dirname}/${ROLE_NAME}"
