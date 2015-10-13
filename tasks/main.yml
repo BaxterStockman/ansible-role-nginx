@@ -18,6 +18,7 @@
   tags:
     - nginx
     - config
+    - service
 
 - include: service.yml
   tags:

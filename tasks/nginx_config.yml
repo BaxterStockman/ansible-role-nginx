@@ -15,8 +15,6 @@
       setype: "{{ nginx_setype | default(omit) }}"
       seuser: "{{ nginx_seuser | default(omit) }}"
   register: nginx_config_res
-  notify:
-    - restart nginx service
   tags:
     - nginx
     - config

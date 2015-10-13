@@ -10,11 +10,12 @@
   tags:
     - nginx
     - config
+    - service
 
 - name: compare nginx config stats
   debug: trigger nginx restart
   changed_when: nginx_config_stat_pre.checksum != nginx_config_stat_post.checksum
-
+  notify: restart nginx service
 
 # handlers file for nginx
 - name: restart nginx service
@@ -24,7 +25,9 @@
     pattern: "{{ nginx_service_pattern | default(omit) }}"
     runlevel: "{{ nginx_service_runlevel | default(omit) }}"
     sleep: "{{ nginx_service_sleep | default(omit) }}"
-    state: "{{ nginx_service_state }}"
+    state: restarted
+  # Only perform restart if service is enabled
+  when: nginx_service_enabled | default('no') | bool
   tags:
     - nginx
     - service

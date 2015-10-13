@@ -1,38 +1,77 @@
 Role Name
 =========
 
-A brief description of the role goes here.
+[![Build Status](https://travis-ci.org/BaxterStockman/ansible-role-nginx.svg?branch=bootstrap_migrate)](https://travis-ci.org/BaxterStockman/ansible-role-nginx)
 
-Requirements
-------------
-
-Any pre-requisites that may not be covered by Ansible itself or the role should be mentioned here. For instance, if the role uses the EC2 module, it may be a good idea to mention in this section that the boto package is required.
+An Ansible role for managing the NGINX webserver
 
 Role Variables
 --------------
 
-A description of the settable variables for this role should go here, including any variables that are in defaults/main.yml, vars/main.yml, and any variables that can/should be set via parameters to the role. Any variables that are read from other roles and/or the global scope (ie. hostvars, group vars, etc.) should be mentioned here as well.
+```yaml
+### From defaults/main.yml:
+nginx_homedir: /etc/nginx
+nginx_config_dest: "{{ nginx_homedir }}/nginx.conf"
+
+nginx_owner: root
+nginx_group: root
+nginx_file_mode: '0644'
+
+# For the `service` module
+nginx_service_name: nginx
+
+### Other variables; most are 'omit' by default:
+
+# For the `stat` module
+follow: "{{ nginx_follow | default(omit) }}"
+
+# For the `service` module
+arguments: "{{ nginx_service_arguments | default(omit) }}"
+enabled: "{{ nginx_service_enabled | default(omit) | bool }}"
+pattern: "{{ nginx_service_pattern | default(omit) }}"
+runlevel: "{{ nginx_service_runlevel | default(omit) }}"
+sleep: "{{ nginx_service_sleep | default(omit) }}"
+# The `service` module is only invoked when this is defined, and the NGINX
+service is only restarted when this is true.
+enabled: "{{ nginx_service_enabled }}"
+```
 
 Dependencies
 ------------
 
-A list of other roles hosted on Galaxy should go here, plus any details in regards to parameters that may need to be set for other roles, or variables that are used from other roles.
+This role requires the
+[`bootstrap`](https://github.com/BaxterStockman/bootstrap) Ansible module in
+order to temporarily install the
+[`nginxparser`](https://github.com/fatiherikli/nginxparser) Python library,
+which it uses to manage the NGINX configuration file.
 
 Example Playbook
 ----------------
 
-Including an example of how to use your role (for instance, with variables passed in as parameters) is always nice for users too:
+Please see [`test/playbook.yml`](test/playbook.yml) for example usage.
 
-    - hosts: servers
-      roles:
-         - { role: username.rolename, x: 42 }
+Rather than limit your ability to customize the NGINX configuration file as you
+see fit, this role provides an `nginx_config` task that can be used from your
+playbook once you include the `nginx` role:
+
+```yaml
+- hosts: all
+  roles:
+    role: nginx
+  tasks:
+    nginx_config:
+      # Settings here...
+```
+
+This module restarts the NGINX service if and only if the configuration file
+has changed during the course of the play, and `nginx_service_enable` is true.
 
 License
 -------
 
-BSD
+GPLv3
 
 Author Information
 ------------------
 
-An optional section for the role authors to include contact information, or a website (HTML is not allowed).
+[Matt Schreiber](https://github.com/BaxterStockman)
