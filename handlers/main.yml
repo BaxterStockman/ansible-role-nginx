@@ -1,10 +1,11 @@
 ---
+# handlers file for nginx
 - name: check nginx config
   stat:
-    follow: "{{ nginx_follow | default(omit) }}"
+    follow: "{{ nginx_config_follow | default(omit) }}"
     get_checksum: yes
     path: "{{ nginx_config_dest }}"
-  register: nginx_config_stat_post
+  register: nginx_config_st_post
   notify:
     - compare nginx config stats
   tags:
@@ -14,10 +15,13 @@
 
 - name: compare nginx config stats
   debug: trigger nginx restart
-  changed_when: nginx_config_stat_pre.checksum != nginx_config_stat_post.checksum
+  changed_when: nginx_config_st_pre.checksum != nginx_config_st_post.checksum
   notify: restart nginx service
+  tags:
+    - nginx
+    - config
+    - service
 
-# handlers file for nginx
 - name: restart nginx service
   service:
     arguments: "{{ nginx_service_arguments | default(omit) }}"

@@ -10,12 +10,12 @@ Role Variables
 
 ```yaml
 ### From defaults/main.yml:
-nginx_homedir: /etc/nginx
-nginx_config_dest: "{{ nginx_homedir }}/nginx.conf"
+nginx_config_homedir: /etc/nginx
+nginx_config_dest: "{{ nginx_config_homedir }}/nginx.conf"
 
-nginx_owner: root
+nginx_user: root
 nginx_group: root
-nginx_file_mode: '0644'
+nginx_config_file_mode: '0644'
 
 # For the `service` module
 nginx_service_name: nginx
@@ -23,7 +23,7 @@ nginx_service_name: nginx
 ### Other variables; most are 'omit' by default:
 
 # For the `stat` module
-follow: "{{ nginx_follow | default(omit) }}"
+follow: "{{ nginx_config_follow | default(omit) }}"
 
 # For the `service` module
 arguments: "{{ nginx_service_arguments | default(omit) }}"
