@@ -1,5 +1,5 @@
-Role Name
-=========
+Ansible Role: nginx
+===================
 
 [![Build Status](https://travis-ci.org/BaxterStockman/ansible-role-nginx.svg?branch=bootstrap_migrate)](https://travis-ci.org/BaxterStockman/ansible-role-nginx)
 

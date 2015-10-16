@@ -13,8 +13,8 @@
     get_checksum: yes
     path: "{{ nginx_config_dest }}"
   register: nginx_config_st_pre
-  notify:
-    - check nginx config
+  when: nginx_service_restart_on_change | bool
+  changed_when: nginx_service_restart_on_change | bool
   tags:
     - nginx
     - config
@@ -24,3 +24,9 @@
   tags:
     - nginx
     - service
+
+- name: notify nginx service restart handler
+  debug: notify nginx service restart handler
+  when: nginx_service_restarted | bool
+  changed_when: nginx_service_restarted | bool
+

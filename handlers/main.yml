@@ -6,16 +6,18 @@
     get_checksum: yes
     path: "{{ nginx_config_dest }}"
   register: nginx_config_st_post
+  # Always trigger checksum comparisons
+  changed_when: nginx_service_restart_on_change | bool
   notify:
-    - compare nginx config stats
+    - compare nginx config checksums
   tags:
     - nginx
     - config
     - service
 
-- name: compare nginx config stats
+- name: compare nginx config checksums
   debug: trigger nginx restart
-  changed_when: nginx_config_st_pre.checksum != nginx_config_st_post.checksum
+  changed_when: nginx_config_st_pre.stat.checksum != nginx_config_st_post.stat.checksum
   notify: restart nginx service
   tags:
     - nginx
@@ -30,8 +32,6 @@
     runlevel: "{{ nginx_service_runlevel | default(omit) }}"
     sleep: "{{ nginx_service_sleep | default(omit) }}"
     state: restarted
-  # Only perform restart if service is enabled
-  when: nginx_service_enabled | default('no') | bool
   tags:
     - nginx
     - service

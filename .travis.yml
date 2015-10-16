@@ -27,9 +27,11 @@ script:
     # Run the role/playbook with ansible-playbook
     - "ansible-playbook -l travis test/$SITE --become"
 
-    # Run the role/playbook again, checking for idempotence
+    # Run the role/playbook again, checking for idempotence.
+    # Allow 2 tasks to be marked as changed -- these are the `stat` tasks that
+    # we want to always trigger handlers.
     - >
-        if ansible-playbook -l travis test/$SITE --become | grep -q "changed=0.*failed=0"; then
+        if ansible-playbook -l travis test/$SITE --become | grep -q "changed=2.*failed=0"; then
             echo "Idempotence test: pass"
             exit 0
         else
