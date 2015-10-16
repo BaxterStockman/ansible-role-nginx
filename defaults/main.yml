@@ -11,4 +11,4 @@ nginx_service_name: nginx
 nginx_service_enabled: no
 
 nginx_service_restarted: no
-nginx_service_restart_on_change: no
+nginx_service_restarted_on_change: no
