@@ -12,5 +12,4 @@
               index: 'index.htm'
       nginx_config_file_mode: '0644'
       nginx_service_enabled: no
-      nginx_service_restarted_on_change: yes
       become: true

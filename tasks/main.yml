@@ -14,6 +14,7 @@
     path: "{{ nginx_config_dest }}"
   register: nginx_config_st_pre
   when: nginx_service_restarted_on_change | bool
+  changed_when: nginx_service_restarted_on_change | bool
   tags:
     - nginx
     - config
