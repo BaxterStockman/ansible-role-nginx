@@ -1,6 +1,6 @@
 ---
 - name: install nginx
-  pacman:
+  apt:
     name: "{{ nginx_pkg_name }}"
     state: "{{ nginx_pkg_state }}"
   tags:

@@ -7,6 +7,18 @@
     - nginx
     - pacman
 
+- include: apt.yml
+  when: ansible_pkg_mgr == 'apt'
+  tags:
+    - nginx
+    - apt
+
+- include: yum.yml
+  when: ansible_pkg_mgr == 'yum'
+  tags:
+    - nginx
+    - yum
+
 - name: get pre-run stat of nginx config
   stat:
     follow: "{{ nginx_config_follow | default(omit) }}"
@@ -15,6 +27,7 @@
   register: nginx_config_st_pre
   when: nginx_service_restarted_on_change | bool
   changed_when: nginx_service_restarted_on_change | bool
+  notify: get post-run stat of nginx config
   tags:
     - nginx
     - config

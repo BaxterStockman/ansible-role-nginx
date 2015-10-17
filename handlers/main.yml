@@ -1,13 +1,13 @@
 ---
 # handlers file for nginx
-- name: check nginx config
+- name: get post-run stat of nginx config
   stat:
     follow: "{{ nginx_config_follow | default(omit) }}"
     get_checksum: yes
     path: "{{ nginx_config_dest }}"
   register: nginx_config_st_post
   # Always trigger checksum comparisons
-  changed_when: nginx_service_restart_on_change | bool
+  changed_when: nginx_service_restarted_on_change | bool
   notify:
     - compare nginx config checksums
   tags:
