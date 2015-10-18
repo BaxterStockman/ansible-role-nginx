@@ -3,13 +3,27 @@
 - hosts: all
   roles:
     - role: nginx
-      nginx_config_settings:
-        http:
-          server:
-            '/this-.*':
-              location: "~"
-              root: '/usr/share/webapps/this'
-              index: 'index.htm'
       nginx_config_file_mode: '0644'
       nginx_service_enabled: no
+      become: true
+  tasks:
+    - name: twiddle nginx.conf settings
+      nginx_config:
+        dest: /etc/nginx/nginx.conf
+        settings:
+          http:
+            server:
+              '/this-.*':
+                location: "~"
+                root: '/usr/share/webapps/this'
+                index: 'index.htm'
+      become: true
+    - name: delete section
+      nginx_config:
+        dest: /etc/nginx/nginx.conf
+        section: http
+        option:
+          server:
+            '/50x.html':
+        state: absent
       become: true
