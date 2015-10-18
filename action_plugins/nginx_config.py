@@ -31,19 +31,24 @@ class ActionModule(object):
     TRANSFERS_FILES = True
 
     # Paths, relative to files/, of required Python libraries
-    required_sources = [dict(src='utils')]
+    required_sources = [dict(src='utils', dirname='files')]
 
     def __init__(self, runner):
         self.runner = runner
         # Instantiate the action_plugin for the 'bootstrap' module
         self.bootstrap_handler = utils.plugins.action_loader.get('bootstrap', runner)
 
+    def _get_source_abspaths(self, sources):
+        return map(lambda x: dict(src=utils.path_dwim_relative(__file__, x.get('dirname', None), x.get('src', None), self.runner.basedir)), sources)
+
     def run(self, conn, tmp, module_name, module_args, inject, complex_args=None, **kwargs):
+        sources = self._get_source_abspaths(self.required_sources)
+
         nginx_options = None
         if module_args:
             nginx_options = module_args
         else:
             nginx_options = complex_args
 
-        bootstrap_complex_args = dict(sources=self.required_sources, skip_action_plugin=True, nginx_config=nginx_options)
+        bootstrap_complex_args = dict(sources=sources, skip_action_plugin=True, nginx_config=nginx_options)
         return self.bootstrap_handler.run(conn, tmp, 'bootstrap', '', inject, complex_args=bootstrap_complex_args, **kwargs)
