@@ -57,8 +57,6 @@ options:
   settings:
     description:
       - A hash of settings that will be merged into C(nginx.conf).
-      - Top-level keys are section names, (almost) everything else is a
-        C(option = value) pair (see the 'Notes' section for the exception).
   state:
     description:
       - The desired state of the section, option, or hash of settings.
@@ -78,29 +76,10 @@ options:
     required: no
     default: "no"
     choices: [ "yes", "no" ]
-notes:
-  - This module uses Nginx's library code for manipulating the
-    configuration file, so Nginx must be installed and its libraries must
-    be readable or the module will fail to run.
-  - Nginx does a fair bit of internal twiddling between (1) loading the
-    configuration file into a ConfigObj object, (2) translating configuration
-    file settings into its own internal database settings, and (3) merging that
-    database back into the ConfigObj object prior to writing out a new
-    configuration file.  This twiddling includes, but is far from limited to,
-    adding default values for the various C([categories]).  Rather than try to
-    re-implement Nginx's internal logic, this module instead tries its
-    hardest to rely on Nginx's own library routines.  But because so much of
-    the munging logic just described occurs within subroutines that
-    inextricably involve reading from and writing to disk, this module is very
-    heavy on the I/O -- every C(nginx_config) task involves at least two
-    reads and two writes of C(nginx.conf).  Batch mode helps cut down on this.
-  - Final caution: this module does not preserve comments in the configuration
-    file.
 
 requirements: [ nginx ]
 
-author: Matt Schreiber U(https://github.com/BaxterStockman), based on Jan-Piet
-        Miens' work on the M(ini_file) module.
+author: Matt Schreiber U(https://github.com/BaxterStockman)
 '''
 
 EXAMPLES = '''
@@ -153,7 +132,7 @@ class NginxConfigWrapper(object):
         # Backup filename for restoration in case of error
         self.temp_filename = tempfile.mktemp()
 
-        # Try to create a backup file, ignoring errors errors, since the source
+        # Try to create a backup file, ignoring errors since the source
         # file might not exist yet.
         if not os.path.exists(self.temp_filename):
             try:
