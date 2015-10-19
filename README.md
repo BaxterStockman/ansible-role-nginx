@@ -1,7 +1,7 @@
 Ansible Role: nginx
 ===================
 
-[![Build Status](https://travis-ci.org/BaxterStockman/ansible-role-nginx.svg?branch=bootstrap_migrate)](https://travis-ci.org/BaxterStockman/ansible-role-nginx)
+[![Build Status](https://travis-ci.org/BaxterStockman/ansible-role-nginx.svg?branch=master)](https://travis-ci.org/BaxterStockman/ansible-role-nginx)
 
 An Ansible role for managing the NGINX webserver
 
@@ -32,7 +32,7 @@ pattern: "{{ nginx_service_pattern | default(omit) }}"
 runlevel: "{{ nginx_service_runlevel | default(omit) }}"
 sleep: "{{ nginx_service_sleep | default(omit) }}"
 # The `service` module is only invoked when this is defined, and the NGINX
-service is only restarted when this is true.
+# service is only restarted when this is true.
 enabled: "{{ nginx_service_enabled }}"
 ```
 
@@ -40,7 +40,7 @@ Dependencies
 ------------
 
 This role requires the
-[`bootstrap`](https://github.com/BaxterStockman/bootstrap) Ansible module in
+[`bootstrap`](https://github.com/BaxterStockman/ansible-bootstrap) Ansible module in
 order to temporarily install the
 [`nginxparser`](https://github.com/fatiherikli/nginxparser) Python library,
 which it uses to manage the NGINX configuration file.
@@ -64,7 +64,10 @@ playbook once you include the `nginx` role:
 ```
 
 This module restarts the NGINX service if and only if the configuration file
-has changed during the course of the play, and `nginx_service_enable` is true.
+has changed during the course of the play, and
+`nginx_service_restarted_on_change` is true. You can also force a restart by
+setting `nginx_service_restarted` to true.
+
 
 License
 -------
