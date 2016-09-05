@@ -1,0 +1,8 @@
+---
+- name: install nginx
+  package:
+    name: '{{ nginx_pkg_prereq }}'
+    state: present
+  loop_control:
+    loop_var: nginx_pkg_prereq
+  with_items: '{{ nginx_pkg_prereqs }}'

@@ -3,15 +3,10 @@
 nginx_config_homedir: /etc/nginx
 nginx_config_dest: "{{ nginx_config_homedir }}/nginx.conf"
 
+# TODO infer these from the installed files
 nginx_user: root
 nginx_group: root
 nginx_config_file_mode: '0644'
 
-nginx_pkg_name: nginx
-nginx_pkg_state: present
-
-nginx_service_name: nginx
-nginx_service_enabled: no
-
-nginx_service_restarted: no
-nginx_service_restarted_on_change: no
+nginx_nginxparser_url: https://github.com/fatiherikli/nginxparser.git
+nginx_nginxparser_protocol: 'git'

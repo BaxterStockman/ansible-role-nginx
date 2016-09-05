@@ -1,8 +1,0 @@
----
-- name: install nginx
-  yum:
-    name: "{{ nginx_pkg_name }}"
-    state: "{{ nginx_pkg_state }}"
-  tags:
-    - nginx
-    - pacman

@@ -112,7 +112,10 @@ import shutil
 import sys
 import tempfile
 
-from utils import nginxparser
+try:
+  import nginxparser
+except:
+  from certbot_nginx import nginxparser
 
 def assign(d, k):
     def make_assignment(f):
@@ -158,7 +161,7 @@ class NginxConfigWrapper(object):
         if self.module.check_mode:
             # Try to restore backup file
             try:
-                shutil.move(self.temp_filename, self.filename)
+                self.module.atomic_move(self.temp_filename, self.filename)
             except:
                 # Assume that failure to restore the file indicates that no
                 # backup was made because no file existed at the start of the
@@ -304,7 +307,7 @@ class NginxConfigWrapper(object):
 
     def to_dict(self, caller_nested_list):
         '''
-        Converts a nested list of the form produced by nginxparser.load(s) into
+        Converts a nested list of the form produced by nginxparser.load/loads into
         a dict
         '''
 

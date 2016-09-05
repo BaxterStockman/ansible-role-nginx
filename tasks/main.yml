@@ -1,46 +1,28 @@
 ---
 # tasks file for nginx
-
-- include: pacman.yml
-  when: ansible_pkg_mgr == 'pacman'
+- name: include package-manager-specific vars
+  include_vars: '{{ ansible_pkg_mgr }}.yml'
+  when: ansible_pkg_mgr is defined
   tags:
-    - nginx
-    - pacman
+    - always
 
-- include: apt.yml
-  when: ansible_pkg_mgr == 'apt'
+- name: include distribution-specific vars
+  include_vars: '{{ ansible_distribution }}.yml'
+  when: ansible_distribution is defined
   tags:
-    - nginx
-    - apt
+    - always
 
-- include: yum.yml
-  when: ansible_pkg_mgr == 'yum'
+- name: include package tasks
+  include: package.yml
+  when: ansible_pkg_mgr is defined
   tags:
-    - nginx
-    - yum
+    - nginx.package
 
-- name: get pre-run stat of nginx config
-  stat:
-    follow: "{{ nginx_config_follow | default(omit) }}"
-    get_checksum: yes
-    path: "{{ nginx_config_dest }}"
-  register: nginx_config_st_pre
-  when: nginx_service_restarted_on_change | bool
-  changed_when: nginx_service_restarted_on_change | bool
-  notify: get post-run stat of nginx config
+- name: include pip tasks
+  include: pip.yml
+  when: '"certbot-nginx" not in nginx_pkg_prereqs'
   tags:
-    - nginx
-    - config
-    - service
-
-- include: service.yml
-  tags:
-    - nginx
-    - service
-
-- name: notify nginx service restart handler
-  debug: notify nginx service restart handler
-  when: nginx_service_restarted | bool
-  changed_when: nginx_service_restarted | bool
-  notify: restart nginx service
-
+    # Tagged with package in case nginxparser/certbot-nginx isn't available
+    # through the package manager
+    - nginx.package
+    - nginx.pip

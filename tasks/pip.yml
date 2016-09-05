@@ -1,0 +1,12 @@
+- name: install certbot-nginx
+  pip:
+    executable: '{{ nginx_pip_executable | default(omit) }}'
+    name: certbot-nginx
+    state: present
+
+- name: install nginxparser
+  pip:
+    executable: '{{ nginx_pip_executable | default(omit) }}'
+    name: '{{ nginx_nginxparser_protocol}}+{{ nginx_nginxparser_url }}#egg=nginxparser'
+    state: present
+    editable: yes
